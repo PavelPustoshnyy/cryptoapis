@@ -1,0 +1,9 @@
+SHORT_STOP=240
+LONG_STOP=259200
+MIN_LIMIT=0.15
+MAX_LIMIT=0.5
+Q_LIMIT=0
+MIN_MAX_D_CUR=2
+DEBUG=True
+LOG_DIR_PATH='/Users/pavel/PycharmProjects/cryptoapis/log/'
+RAW_LOG_LEVEL='debug'
