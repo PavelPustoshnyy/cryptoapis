@@ -32,3 +32,17 @@ class Reader:
 
     def get_tickers(self):
         return self._client.get_all_tickers()
+
+    def get_order_info(self, symbol, orderId):
+        return self._client.get_order(symbol=symbol, orderId=orderId)
+
+    def get_my_trades(self, symbol):
+        return self._client.get_my_trades(symbol=symbol)
+
+    def create_order(self, symbol, side, order_type, quantity, price, timeInForce):
+        if price is None:
+            return self._client.create_order(symbol=symbol, side=side, type=order_type,
+                                                     timeInForce=timeInForce, quantity=quantity)
+        else:
+            return self._client.create_order(symbol=symbol, side=side, type=order_type,
+                                         timeInForce=timeInForce, quantity=quantity, price=price)

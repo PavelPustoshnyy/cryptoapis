@@ -137,3 +137,11 @@ class Calculator:
     @staticmethod
     def get_min_cur_qty(btc_spot_balance, min_cur_order_price):
         return float(btc_spot_balance) / min_cur_order_price
+
+    @staticmethod
+    def check_order_status(order_info, status):
+        return order_info['status'] == status
+
+    @staticmethod
+    def get_executed_qty(order_info):
+        return order_info['executedQty']

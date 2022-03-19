@@ -36,3 +36,17 @@ def get_currencies():
 
 def get_final_currencies(crns, stp_lst):
     return [x for x in crns if x not in stp_lst]
+
+
+def filter_currencies(logger, rdr, clc, crns):
+    stp_lst = list()
+    for crn in crns:
+        btc_trades = rdr.get_trades(crn, Coins.BTC)
+        q_sum = clc.get_q_sum(btc_trades)
+        logger.debug(f"{crn}BTC V (sum(q)): {q_sum}")
+        if clc.check_sum(stp_lst, q_sum, crn):
+            usdt_trades = rdr.get_trades(crn, Coins.USDT)
+            q_sum = clc.get_q_sum(usdt_trades)
+            clc.check_sum(stp_lst, q_sum, crn)
+            logger.debug(f"{crn}USDT V (sum(q)): {q_sum}")
+    return stp_lst
