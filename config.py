@@ -5,5 +5,5 @@ MAX_LIMIT=0.5
 Q_LIMIT=0
 MIN_MAX_D_CUR=2
 DEBUG=True
-LOG_DIR_PATH='/Users/pavel/PycharmProjects/cryptoapis/log/'
+LOG_DIR_PATH='log/'
 RAW_LOG_LEVEL='debug'
