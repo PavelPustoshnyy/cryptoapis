@@ -46,3 +46,9 @@ class Reader:
         else:
             return self._client.create_order(symbol=symbol, side=side, type=order_type,
                                          timeInForce=timeInForce, quantity=quantity, price=price)
+
+    def get_price(self, symbol):
+        tickers = self.get_tickers()
+        for ticker in tickers:
+            if ticker['symbol'] == symbol:
+                return ticker['price']

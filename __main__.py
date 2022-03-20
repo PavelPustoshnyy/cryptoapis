@@ -35,18 +35,18 @@ def main():
 
     if not (calculator.check_min_max_d_cur(min_max_d_curs)):
         return
-    spot_balance = reader.get_spot_balance(Coins.USDT)
 
-    if config.DEBUG:
-        spot_balance = reader.get_spot_balance(Coins.BTC)
-
-    logger.debug(f"Spot balance in USDT (when DEBUG=TRUE in BTC): {spot_balance}")
-
-    working_amount = calculator.get_working_amount(spot_balance)
+    # 3rd block
+    # 3.1
+    usdt_spot_balance = reader.get_spot_balance(Coins.USDT)
+    logger.debug(f"Spot balance in USDT (when DEBUG=TRUE in BTC): {usdt_spot_balance}")
+    working_amount = calculator.get_working_amount(usdt_spot_balance)
     logger.debug(f"Working amount: {working_amount}")
 
-    new_all_tickers = reader.get_tickers()
+    # 3.2.1
+    # getting prices
     min_and_max_curs = [min_max_d_curs['max_d_cur'][0], min_max_d_curs['min_d_cur'][0], Coins.BTC]
+    new_all_tickers = reader.get_tickers()
     fresh_d_curs, fresh_result_prices = calculator.get_d_curs_and_result_prices(new_all_tickers,
                                                                                 min_and_max_curs)
     logger.debug(f"Fresh result prices: {fresh_result_prices}")
@@ -63,20 +63,26 @@ def main():
                                               price=max_cur_order_price,
                                               timeInForce='FoK'
                                               )
-    order_info = reader.get_order_info(symbol=min_max_d_curs['max_d_cur'][0] + Coins.USDT,
+    order_info_limit_max = reader.get_order_info(symbol=min_max_d_curs['max_d_cur'][0] + Coins.USDT,
                                        orderId=order_buy_limit_max['orderId'])
-    if not calculator.check_order_status(order_info, 'FILLED'):
+
+    # 3.2.2
+    if not calculator.check_order_status(order_info_limit_max, 'FILLED'):
         return
 
-    executed_qty_max = calculator.get_executed_qty(order_info)
-    reader.create_order(symbol=min_max_d_curs['max_d_cur'][0] + Coins.BTC,
+    # 3.2.3
+    executed_qty_max = calculator.get_executed_qty(order_info_limit_max)
+    order_sell_market_max = reader.create_order(symbol=min_max_d_curs['max_d_cur'][0] + Coins.BTC,
                         side='SELL',
                         order_type='MARKET',
                         quantity=executed_qty_max,
                         price=None,
                         timeInForce='FoK'
                         )
+    order_info_market_max = reader.get_order_info(symbol=min_max_d_curs['max_d_cur'][0] + Coins.BTC,
+                                                 orderId=order_sell_market_max['orderId'])
 
+    # 3.2.4
     btc_spot_balance = reader.get_spot_balance(Coins.BTC)
     min_cur_order_price = calculator.get_min_cur_order_price(min_max_d_curs, fresh_result_prices)
     min_cur_qty = calculator.get_min_cur_qty(btc_spot_balance, min_cur_order_price)
@@ -90,10 +96,14 @@ def main():
                                               price=min_cur_order_price,
                                               timeInForce='FoK'
                                               )
-    order_info = reader.get_order_info(symbol=min_max_d_curs['min_d_cur'][0] + Coins.BTC,
+    order_info_limit_min = reader.get_order_info(symbol=min_max_d_curs['min_d_cur'][0] + Coins.BTC,
                                        orderId=order_buy_limit_min['orderId'])
-    if calculator.check_order_status(order_info, 'FILLED'):
-        executed_qty_min = calculator.get_executed_qty(order_info)
+
+    # 3.2.5
+    if calculator.check_order_status(order_info_limit_min, 'FILLED'):
+
+        # 3.2.6a
+        executed_qty_min = calculator.get_executed_qty(order_info_market_max)
         reader.create_order(symbol=min_max_d_curs['min_d_cur'][0] + Coins.USDT,
                             side='SELL',
                             order_type='MARKET',
@@ -102,14 +112,21 @@ def main():
                             timeInForce='FoK'
                             )
     else:
+
+        # 3.2.6b
+
+        btcusdt_order_price = reader.get_price(Coins.BTC+Coins.USDT)
+        btc_qty = float(reader.get_spot_balance(Coins.BTC))
+
         order_sell_limit_btcusdt = reader.create_order(symbol=Coins.BTC + Coins.USDT,
                                                        side='SELL',
                                                        order_type='LIMIT',
-                                                       quantity=,  # TODO
-                                                       price=min_cur_order_price * (0.0750 * 3 + 0.005),  # TODO
+                                                       quantity=btc_qty,
+                                                       price=btcusdt_order_price * (0.0750 * 3 + 0.005),
                                                        timeInForce='GTC'
                                                        )
 
+        # 3.2.7 sell limit order
         time_delta = 0
         btc_sell_time_start = current_milli_time()
         while (time_delta < 300000 and not calculator.check_order_status(
@@ -120,13 +137,16 @@ def main():
         if calculator.check_order_status(
                 reader.get_order_info(symbol=Coins.BTC + Coins.USDT,
                                       orderId=order_sell_limit_btcusdt['orderId']), 'FILLED'):
+            # 3.2.8 exit
             return
+        # 3.2.7 new sell market order
         else:
+            btc_qty = float(reader.get_spot_balance(Coins.BTC))
             reader.create_order(symbol=Coins.BTC + Coins.USDT,
                                 side='SELL',
                                 order_type='MARKET',
-                                quantity=,  # TODO
-                                price=min_cur_order_price * (0.0750 * 3 + 0.005),  # TODO
+                                quantity=btc_qty,
+                                price=None,
                                 timeInForce='FoK'
                                 )
 
