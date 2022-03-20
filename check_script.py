@@ -1,5 +1,5 @@
-from reader_api.reader import Reader
-from utils.logger import get_logger, configure_logger
+from src.reader_api.reader import Reader
+from src.utils.logger import get_logger
 
 logger = get_logger()
 symbol = 'BTCUSDT'
@@ -11,3 +11,5 @@ print("order: ", reader.get_order_info(symbol, trades[0]["orderId"]))
 order_info = reader.get_order_info(symbol='BTCUSDT',
                                                orderId=trades[0]["orderId"])
 print(order_info)
+
+print(reader.get_price("BTCUSDT"))

@@ -1,9 +1,9 @@
-from calculator_api.calculator import Calculator
-from reader_api.reader import Reader
-from utils.constants import Coins
-from utils.functions import current_milli_time, get_currencies, get_final_currencies, filter_currencies
-import config
-from utils.logger import get_logger, configure_logger
+from src.calculator_api.calculator import Calculator
+from src.reader_api.reader import Reader
+from src.utils.constants import Coins
+from src.utils.functions import current_milli_time, get_currencies, get_final_currencies, filter_currencies
+from src import config
+from src.utils.logger import get_logger, configure_logger
 
 
 def main():

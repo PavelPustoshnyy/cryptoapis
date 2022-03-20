@@ -1,6 +1,6 @@
 import time
 
-from utils.constants import Coins
+from src.utils.constants import Coins
 
 
 def current_milli_time():

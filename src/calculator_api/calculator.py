@@ -1,8 +1,8 @@
 import copy
 
-import config
-from utils.constants import Params, Coins
-from utils.functions import stop_robot
+from src import config
+from src.utils.constants import Params, Coins
+from src.utils.functions import stop_robot
 
 
 class Calculator:

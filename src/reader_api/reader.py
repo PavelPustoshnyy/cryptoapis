@@ -4,8 +4,8 @@ import time
 import pandas as pd
 from binance.client import Client
 
-import client_config
-from utils.constants import Params
+from src import client_config
+from src.utils.constants import Params
 
 
 class Reader:
