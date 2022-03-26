@@ -1,6 +1,7 @@
 /.venv/
-/src/client_config.py
 /log/
 .idea
-check_script.py
 /src/client_config.py
+/src/config.py
+/__main__.py
+/check_script.py
