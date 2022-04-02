@@ -52,3 +52,8 @@ class Reader:
         for ticker in tickers:
             if ticker['symbol'] == symbol:
                 return ticker['price']
+
+    def cancel_order(self, symbol, order):
+        self._client.cancel_order(
+            symbol=symbol,
+            orderId=order['orderId'])

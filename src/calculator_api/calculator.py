@@ -124,7 +124,7 @@ class Calculator:
 
     @staticmethod
     def get_max_cur_order_price(min_max_d_curs, result_prices):
-        return result_prices[min_max_d_curs['max_d_cur'][0]][Coins.USDT] * 1.005
+        return result_prices[min_max_d_curs['max_d_cur'][0]][Coins.USDT] * 1.001
 
     @staticmethod
     def get_min_cur_order_price(min_max_d_curs, result_prices):
@@ -145,3 +145,11 @@ class Calculator:
     @staticmethod
     def get_executed_qty(order_info):
         return order_info['executedQty']
+
+    @staticmethod
+    def get_coin_price(tickers, symbol):
+        price = None
+        for t in tickers:
+            if t[Params.SYMBOL] == symbol:
+                price = float(t['price'])
+        return price
