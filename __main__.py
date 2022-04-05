@@ -38,8 +38,8 @@ def main():
     logger.info(f"Final currencies which not in stop list: {final_currencies}")
 
     all_tickers = reader.get_tickers()
-    d_curs, old_result_prices = calculator.get_d_curs_and_result_prices(all_tickers, final_currencies)
-    logger.debug(f"Old result prices: {old_result_prices}")
+    d_curs, result_prices = calculator.get_d_curs_and_result_prices(all_tickers, final_currencies)
+    logger.debug(f"Old result prices: {result_prices}")
     logger.debug(f"d(curs): {d_curs}")
 
     min_max_d_curs = calculator.get_min_max(d_curs)
@@ -58,14 +58,8 @@ def main():
     min_cur = min_max_d_curs['min_d_cur'][0]
 
     # 3.2.1
-    # getting prices
-    min_and_max_curs = [max_cur, min_cur, Coins.BTC]
-    new_all_tickers = reader.get_tickers()
-    fresh_d_curs, fresh_result_prices = calculator.get_d_curs_and_result_prices(new_all_tickers,
-                                                                                min_and_max_curs)  # TODO: не нужно использовать новую цену
-    logger.debug(f"Fresh result prices: {fresh_result_prices}")
 
-    max_cur_order_price = calculator.get_max_cur_order_price(min_max_d_curs, fresh_result_prices)
+    max_cur_order_price = calculator.get_max_cur_order_price(min_max_d_curs, result_prices)
     max_cur_qty = calculator.get_max_cur_qty(working_amount, max_cur_order_price)
     logger.debug(f"Buy order price for max cur: {max_cur_order_price}")
     logger.debug(f"Buy qty for max cur: {max_cur_qty}")
@@ -93,7 +87,8 @@ def main():
                                                 side='SELL',
                                                 order_type='LIMIT',
                                                 quantity=executed_qty_max,
-                                                price=calculator.get_coin_price(all_tickers, symbol=symbol),  # TODO: это не совсем актуальная цена, надо брать ранее высчитанную
+                                                price=calculator.get_coin_price(all_tickers, symbol=symbol),
+                                                # TODO: это не совсем актуальная цена, надо брать ранее высчитанную
                                                 timeInForce='GTC'
                                                 )
 
@@ -109,7 +104,8 @@ def main():
         order_sell_limit_max_usdt = reader.create_order(symbol=symbol,
                                                         side='SELL',
                                                         order_type='LIMIT',
-                                                        quantity=max_cur_qty, # TODO: должен быть executed, ан е из пункта 1
+                                                        quantity=max_cur_qty,
+                                                        # TODO: должен быть executed, ан е из пункта 1
                                                         price=float(order_info_limit_max['price']) * 1.0015,
                                                         timeInForce='GTC'
                                                         )
@@ -122,7 +118,8 @@ def main():
             order_sell_limit_max_usdt = reader.create_order(symbol=symbol,
                                                             side='SELL',
                                                             order_type='LIMIT',
-                                                            quantity=max_cur_qty, # TODO: должен быть executed, ан е из пункта 1
+                                                            quantity=max_cur_qty,
+                                                            # TODO: должен быть executed, ан е из пункта 1
                                                             price=float(order_info_limit_max['price']) * 0.995,
                                                             timeInForce='GTC'
                                                             )
@@ -134,7 +131,7 @@ def main():
                 reader.create_order(symbol=symbol,
                                     side='SELL',
                                     order_type='MARKET',
-                                    quantity=max_cur_qty, # TODO: должен быть executed, ан е из пункта 1
+                                    quantity=max_cur_qty,  # TODO: должен быть executed, ан е из пункта 1
                                     price=None,
                                     timeInForce='FoK'
                                     )
@@ -142,7 +139,8 @@ def main():
 
     # 3.2.5
     btc_spot_balance = reader.get_spot_balance(Coins.BTC)
-    min_cur_order_price = calculator.get_min_cur_order_price(min_max_d_curs, fresh_result_prices) # TODO: заменить fresh_result_prices
+    min_cur_order_price = calculator.get_min_cur_order_price(min_max_d_curs,
+                                                             result_prices)
     min_cur_qty = calculator.get_min_cur_qty(btc_spot_balance, min_cur_order_price)
     logger.debug(f"Buy order price for min cur: {min_cur_order_price}")
     logger.debug(f"Buy qty for min cur: {min_cur_qty}")
@@ -162,7 +160,8 @@ def main():
         # 3.2.8a
         symbol = min_cur + Coins.USDT
         all_tickers = reader.get_tickers()
-        min_cur_usdt_price = calculator.get_coin_price(all_tickers, symbol) * 0.995  # TODO: здесь нужно брать цену не с бинанса, а из блока 2
+        min_cur_usdt_price = calculator.get_coin_price(all_tickers,
+                                                       symbol) * 0.995  # TODO: здесь нужно брать цену не с бинанса, а из блока 2
         executed_qty_min = calculator.get_executed_qty(order_info_limit_min)
         reader.create_order(symbol=symbol,
                             side='SELL',
