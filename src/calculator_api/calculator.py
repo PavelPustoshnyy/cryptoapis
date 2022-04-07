@@ -123,14 +123,6 @@ class Calculator:
         return float(spot_balance) * 0.05
 
     @staticmethod
-    def get_max_cur_order_price(min_max_d_curs, result_prices):
-        return result_prices[min_max_d_curs['max_d_cur'][0]][Coins.USDT] * 1.001
-
-    @staticmethod
-    def get_min_cur_order_price(min_max_d_curs, result_prices):
-        return result_prices[min_max_d_curs['min_d_cur'][0]][Coins.BTC] * 1.005
-
-    @staticmethod
     def get_max_cur_qty(working_amount, max_cur_order_price):
         return working_amount / max_cur_order_price
 
@@ -153,3 +145,7 @@ class Calculator:
             if t[Params.SYMBOL] == symbol:
                 price = float(t['price'])
         return price
+
+    @staticmethod
+    def get_actual_coin_price(prices, coin, cur):
+        return float(prices[coin[cur]])
