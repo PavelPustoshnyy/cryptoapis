@@ -6,16 +6,15 @@ from src import config
 from src.utils.logger import get_logger, configure_logger
 
 
-def order_filled_waiting(reader, calculator, symbol, order, waiting_time):
+def order_filled(reader, calculator, symbol, order, waiting_time):
     time_delta = 0
     max_sell_time_start = current_milli_time()
-    order_filled = False
     while time_delta < waiting_time:
         order_info = reader.get_order_info(symbol=symbol, orderId=order['orderId'])
         if calculator.check_order_status(order_info, 'FILLED'):
             return True
         time_delta = current_milli_time() - max_sell_time_start
-    return order_filled
+    return False
 
 
 def main():
@@ -73,14 +72,14 @@ def main():
                                               price=max_cur_order_price,
                                               timeInForce='FoK'
                                               )
-    order_info_limit_max = reader.get_order_info(symbol=symbol, orderId=order_buy_limit_max['orderId'])
+    order_buy_info_limit_max = reader.get_order_info(symbol=symbol, orderId=order_buy_limit_max['orderId'])
 
     # 3.2.2
-    if not calculator.check_order_status(order_info_limit_max, 'FILLED'):
+    if not calculator.check_order_status(order_buy_info_limit_max, 'FILLED'):
         return
 
     # 3.2.3
-    executed_qty_max = calculator.get_executed_qty(order_info_limit_max)
+    executed_qty_max = calculator.get_executed_qty(order_buy_info_limit_max)
 
     symbol = max_cur + Coins.BTC
     order_sell_market_max = reader.create_order(symbol=symbol,
@@ -91,12 +90,12 @@ def main():
                                                                                        Coins.BTC),
                                                 timeInForce='GTC'
                                                 )
+    order_sell_info_limit_max = reader.get_order_info(symbol=symbol, orderId=order_sell_market_max['orderId'])
 
     # 3.2.4
     waiting_time = 2 * 60 * 1000  # 2min
-    order_filled = order_filled_waiting(reader, calculator, symbol, order_sell_market_max, waiting_time)
 
-    if not order_filled:
+    if not order_filled(reader, calculator, symbol, order_sell_market_max, waiting_time):
         # 3.2.4.a
         reader.cancel_order(symbol, order_sell_market_max)
 
@@ -105,13 +104,11 @@ def main():
                                                         side='SELL',
                                                         order_type='LIMIT',
                                                         quantity=executed_qty_max,
-                                                        price=float(order_info_limit_max['price']) * 1.0015,
+                                                        price=float(order_buy_info_limit_max['price']) * 1.0015,
                                                         timeInForce='GTC'
                                                         )
         waiting_time = 3 * 60 * 1000  # 3min
-        order_filled = order_filled_waiting(reader, calculator, symbol, order_sell_limit_max_usdt, waiting_time)
-
-        if not order_filled:
+        if not order_filled(reader, calculator, symbol, order_sell_limit_max_usdt, waiting_time):
             # 3.2.4.b
             reader.cancel_order(symbol, order_sell_limit_max_usdt)
 
@@ -119,12 +116,11 @@ def main():
                                                             side='SELL',
                                                             order_type='LIMIT',
                                                             quantity=executed_qty_max,
-                                                            price=float(order_info_limit_max['price']) * 0.995,
+                                                            price=float(order_buy_info_limit_max['price']) * 0.995,
                                                             timeInForce='GTC'
                                                             )
-            order_filled = order_filled_waiting(reader, calculator, symbol, order_sell_limit_max_usdt, waiting_time)
 
-            if not order_filled:
+            if not order_filled(reader, calculator, symbol, order_sell_limit_max_usdt, waiting_time):
                 # 3.2.4.c
                 reader.cancel_order(symbol, order_sell_limit_max_usdt)
 
@@ -152,59 +148,74 @@ def main():
                                               price=min_cur_order_price,
                                               timeInForce='FoK'
                                               )
-    order_info_limit_min = reader.get_order_info(symbol=symbol, orderId=order_buy_limit_min['orderId'])
+    order_buy_info_limit_min = reader.get_order_info(symbol=symbol, orderId=order_buy_limit_min['orderId'])
 
     # 3.2.6
-    if calculator.check_order_status(order_info_limit_min, 'FILLED'):
+    if calculator.check_order_status(order_buy_info_limit_min, 'FILLED'):
         # 3.2.8a
         symbol = min_cur + Coins.USDT
-        min_cur_usdt_price = calculator.get_actual_coin_price(result_prices, min_cur, Coins.USDT) * 0.995
-        executed_qty_min = calculator.get_executed_qty(order_info_limit_min)
-        reader.create_order(symbol=symbol,
-                            side='SELL',
-                            order_type='LIMIT',
-                            quantity=executed_qty_min,
-                            price=min_cur_usdt_price,
-                            timeInForce='GTC'
-                            )
+        min_cur_usdt_price = calculator.get_actual_coin_price(result_prices, min_cur, Coins.USDT)
+        executed_qty_min = calculator.get_executed_qty(order_buy_info_limit_min)
+        order_sell_limit_min = reader.create_order(symbol=symbol,
+                                                   side='SELL',
+                                                   order_type='LIMIT',
+                                                   quantity=executed_qty_min,
+                                                   price=min_cur_usdt_price * 0.995,
+                                                   timeInForce='GTC'
+                                                   )
 
-    ###################################################################################################################
-    else:
-        # 3.2.6b
-        btcusdt_order_price = reader.get_price(Coins.BTC + Coins.USDT)
-        btc_qty = float(reader.get_spot_balance(Coins.BTC))
+        waiting_time = 3 * 60 * 1000  # 3min
+        if not order_filled(reader, calculator, symbol, order_sell_limit_min, waiting_time):
+            # 3.2.8b
+            reader.cancel_order(symbol, order_sell_limit_min)
 
-        order_sell_limit_btcusdt = reader.create_order(symbol=Coins.BTC + Coins.USDT,
+            order_sell_limit_min = reader.create_order(symbol=symbol,
                                                        side='SELL',
                                                        order_type='LIMIT',
-                                                       quantity=btc_qty,
-                                                       price=btcusdt_order_price * (0.0750 * 3 + 0.005),
+                                                       quantity=executed_qty_min,
+                                                       price=min_cur_usdt_price * 0.99,
                                                        timeInForce='GTC'
                                                        )
 
-        # 3.2.7 sell limit order
-        time_delta = 0
-        btc_sell_time_start = current_milli_time()
-        while (time_delta < 300000 and not calculator.check_order_status(
-                reader.get_order_info(symbol=Coins.BTC + Coins.USDT,
-                                      orderId=order_sell_limit_btcusdt['orderId']), 'FILLED')):
-            time_delta = current_milli_time() - btc_sell_time_start
+            waiting_time = 3 * 60 * 1000  # 3min
+            if not order_filled(reader, calculator, symbol, order_sell_limit_min, waiting_time):
+                # 3.2.8c
+                reader.cancel_order(symbol, order_sell_limit_min)
 
-        if calculator.check_order_status(
-                reader.get_order_info(symbol=Coins.BTC + Coins.USDT,
-                                      orderId=order_sell_limit_btcusdt['orderId']), 'FILLED'):
-            # 3.2.8 exit
-            return
-        # 3.2.7 new sell market order
-        else:
-            btc_qty = float(reader.get_spot_balance(Coins.BTC))
-            reader.create_order(symbol=Coins.BTC + Coins.USDT,
-                                side='SELL',
-                                order_type='MARKET',
-                                quantity=btc_qty,
-                                price=None,
-                                timeInForce='FoK'
-                                )
+                reader.create_order(symbol=symbol,
+                                    side='SELL',
+                                    order_type='MARKET',
+                                    quantity=executed_qty_min,
+                                    price=None,
+                                    timeInForce='FoK'
+                                    )
+        return
+
+    # 3.2.7a
+    symbol = Coins.BTC + Coins.USDT
+    btc_qty = float(reader.get_spot_balance(Coins.BTC))
+    btcusdt_price = float(order_buy_info_limit_max['price']) / float(order_sell_info_limit_max['price'])
+    order_sell_limit_btcusdt = reader.create_order(symbol=symbol,
+                                                   side='SELL',
+                                                   order_type='LIMIT',
+                                                   quantity=btc_qty,
+                                                   price=btcusdt_price * 1.00225,
+                                                   timeInForce='GTC'
+                                                   )
+
+    waiting_time = 5 * 60 * 1000  # 5min
+    if not order_filled(reader, calculator, symbol, order_sell_limit_btcusdt, waiting_time):
+        # 3.2.7b
+        reader.cancel_order(symbol, order_sell_limit_btcusdt)
+
+        reader.create_order(symbol=symbol,
+                            side='SELL',
+                            order_type='MARKET',
+                            quantity=btc_qty,
+                            price=None,
+                            timeInForce='FoK'
+                            )
+    # 3.2.7c
 
     ending_time = current_milli_time()
     duration_of_cycle = ending_time - beginning_time
