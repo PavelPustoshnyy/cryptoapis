@@ -42,18 +42,13 @@ class Reader:
     def create_order(self, symbol, side, order_type, quantity, price, timeInForce):
         if price is None:
             return self._client.create_order(symbol=symbol, side=side, type=order_type,
-                                                     timeInForce=timeInForce, quantity=quantity)
+                                             timeInForce=timeInForce, quantity=quantity)
         else:
             return self._client.create_order(symbol=symbol, side=side, type=order_type,
-                                         timeInForce=timeInForce, quantity=quantity, price=price)
+                                             timeInForce=timeInForce, quantity=quantity, price=price)
 
-    # def get_price(self, symbol):
-    #     tickers = self.get_tickers()
-    #     for ticker in tickers:
-    #         if ticker['symbol'] == symbol:
-    #             return ticker['price']
-
-    def cancel_order(self, symbol, order):
+    def cancel_order(self, order):
+        symbol = order['symbol']
         self._client.cancel_order(
             symbol=symbol,
             orderId=order['orderId'])

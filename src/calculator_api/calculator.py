@@ -119,14 +119,6 @@ class Calculator:
         return dx > config.MIN_MAX_D_CUR
 
     @staticmethod
-    def get_working_amount(spot_balance):
-        return float(spot_balance) * 0.05
-
-    @staticmethod
-    def get_max_cur_qty(working_amount, max_cur_order_price):
-        return working_amount / max_cur_order_price
-
-    @staticmethod
     def get_min_cur_qty(btc_spot_balance, min_cur_order_price):
         return float(btc_spot_balance) / min_cur_order_price
 
@@ -134,9 +126,6 @@ class Calculator:
     def check_order_status(order_info, status):
         return order_info['status'] == status
 
-    @staticmethod
-    def get_executed_qty(order_info):
-        return order_info['executedQty']
 
     @staticmethod
     def get_coin_price(tickers, symbol):
