@@ -42,7 +42,7 @@ def main():
     # 3.1
     usdt_spot_balance = reader.get_spot_balance(Coins.USDT)
     logger.debug(f"Spot balance in USDT (when DEBUG=TRUE in BTC): {usdt_spot_balance}")
-    working_amount = float(usdt_spot_balance) * 0.05
+    working_amount = float(usdt_spot_balance) * 0.10
     logger.debug(f"Working amount: {working_amount}")
     max_cur = min_max_d_curs['max_d_cur'][0]
     min_cur = min_max_d_curs['min_d_cur'][0]

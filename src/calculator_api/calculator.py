@@ -126,7 +126,6 @@ class Calculator:
     def check_order_status(order_info, status):
         return order_info['status'] == status
 
-
     @staticmethod
     def get_coin_price(tickers, symbol):
         price = None
@@ -137,4 +136,4 @@ class Calculator:
 
     @staticmethod
     def get_actual_coin_price(prices, coin, cur):
-        return float(prices[coin[cur]])
+        return float(prices[coin][cur])

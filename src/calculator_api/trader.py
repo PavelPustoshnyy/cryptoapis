@@ -21,13 +21,15 @@ class Trader:
         return False
 
     def order_asset(self, symbol, side, order_type, quantity, price, time_in_force):
-        order = self.reader.create_order(symbol=symbol, side=side, order_type=order_type, quantity=quantity,
-                                         price=price, timeInForce=time_in_force)
-        return self.reader.get_order_info(symbol=symbol, orderId=order['orderId'])
+        order = self.reader.create_order(symbol=symbol, side=side, order_type=order_type, quantity=round(quantity, 8),
+                                         price=round(price, 8), timeInForce=time_in_force)
+        order_info = self.reader.get_order_info(symbol=symbol, orderId=order['orderId'])
+        self.logger(f'order info: {order_info}')
+        return order_info
 
     def buy_max_asset(self, asset, qty, price):
         symbol = asset + Coins.USDT
-        return self.order_asset(symbol, 'BUY', 'LIMIT', qty, price, 'FoK')
+        return self.order_asset(symbol, 'BUY', 'LIMIT', qty, price, 'FOK')
 
     def sell_max_asset(self, asset, qty, price):
         symbol = asset + Coins.BTC
@@ -56,13 +58,13 @@ class Trader:
                 if not self.order_filled(order_sell_limit_asset_usdt, waiting_time):
                     self.reader.cancel_order(symbol, order_sell_limit_asset_usdt)
                     price = None
-                    self.order_asset(symbol, 'SELL', 'MARKET', qty, price, 'FoK')
+                    self.order_asset(symbol, 'SELL', 'MARKET', qty, price, 'FOK')
             return False
         return True
 
     def buy_min_asset(self, asset, qty, price):
         symbol = asset + Coins.BTC
-        return self.order_asset(symbol, 'BUY', 'LIMIT', qty, price, 'FoK')
+        return self.order_asset(symbol, 'BUY', 'LIMIT', qty, price, 'FOK')
 
     def sell_min_asset(self, order_info, asset, result_prices):
         # 3.2.8a
@@ -84,7 +86,7 @@ class Trader:
             if not self.order_filled(order_sell_limit_min, waiting_time):
                 self.reader.cancel_order(symbol, order_sell_limit_min)
                 price = None
-                self.order_asset(symbol, 'SELL', 'MARKET', executed_qty_min, price, 'FoK')
+                self.order_asset(symbol, 'SELL', 'MARKET', executed_qty_min, price, 'FOK')
 
     def return_min_usdt(self, symbol, qty, price):
         # 3.2.7a
@@ -93,6 +95,5 @@ class Trader:
         # 3.2.7b
         waiting_time = 5  # 5min
         if not self.order_filled(order_sell_limit, waiting_time):
-
             self.reader.cancel_order(symbol, order_sell_limit)
-            self.order_asset(symbol, 'SELL', 'MARKET', qty, None, 'FoK')
+            self.order_asset(symbol, 'SELL', 'MARKET', qty, None, 'FOK')
