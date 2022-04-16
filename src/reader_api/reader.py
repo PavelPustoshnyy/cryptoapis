@@ -5,7 +5,7 @@ import pandas as pd
 from binance.client import Client
 
 from src import client_config
-from src.utils.constants import Params
+from src.utils.constants import Params, Coins
 
 
 class Reader:
@@ -52,3 +52,16 @@ class Reader:
         self._client.cancel_order(
             symbol=symbol,
             orderId=order['orderId'])
+
+    def get_futures_exchange_info(self):
+        return self._client.futures_exchange_info()
+
+    def get_symbol_info(self, symbol):
+        return self._client.get_symbol_info(symbol=symbol)
+
+    def get_btcusdt_info(self):
+        info = self._client.futures_exchange_info()
+        for item in info['symbols']:
+            if item['symbol'] == Coins.BTC + Coins.USDT:
+                price_dec = item['pricePrecision']
+                return price_dec

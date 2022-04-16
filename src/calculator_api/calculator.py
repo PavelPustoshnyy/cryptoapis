@@ -1,8 +1,6 @@
 import copy
 
-from src import config
 from src.utils.constants import Params, Coins
-from src.utils.functions import stop_robot
 
 
 class Calculator:
@@ -23,38 +21,6 @@ class Calculator:
         else:
             q_sum = btc_trades.q.sum()
         return q_sum
-
-    def check_sum(self, stop_list, q_sum, currency):
-        if q_sum <= config.Q_LIMIT:
-            self.logger.debug(f"{currency} has been added to the stop list.")
-            # if not config.DEBUG:
-            #     stop_list.append(currency)
-            stop_list.append(currency)
-            return False
-        return True
-
-    def check_limits(self, price_change):
-        if config.MIN_LIMIT < price_change <= config.MAX_LIMIT:
-            self.logger.info(f"Price change per minute is {price_change}. Stopping the robot for a short time.")
-            self.logger.info("stopped_4_min: True")
-            if config.DEBUG:
-                return True
-            stop_robot(config.SHORT_STOP)
-            return False
-
-        elif config.MAX_LIMIT < price_change:
-            self.logger.info(f"Price change per minute is {price_change}. Stopping the robot for a long time.")
-            self.logger.info("stopped_3_days(boolean): True")
-            if config.DEBUG:
-                return True
-            stop_robot(config.LONG_STOP)
-            return False
-
-        else:
-            self.logger.info(f"Price change per minute is {price_change}. Continuation of the robot work.")
-            self.logger.info("stopped_4_min: False")
-            self.logger.info("stopped_3_days: False")
-            return True
 
     @staticmethod
     def get_all_coin_prices(tickers, fnl_crns):
@@ -112,27 +78,9 @@ class Calculator:
                    'min_d_cur': (min_symbol, d_curs[min_symbol]), }
         return min_max
 
-    def check_min_max_d_cur(self, min_max_d_curs):
-        dx = (min_max_d_curs['max_d_cur'][1] - min_max_d_curs['min_d_cur'][1]) / min_max_d_curs['min_d_cur'][1] * 100
-        self.logger.debug(f"(max - min) / min = {dx}")
-        self.logger.debug(f"(max - min) / min > MIN_MAX_D_CUR: {dx > config.MIN_MAX_D_CUR}")
-        return dx > config.MIN_MAX_D_CUR
-
     @staticmethod
     def get_min_cur_qty(btc_spot_balance, min_cur_order_price):
         return float(btc_spot_balance) / min_cur_order_price
-
-    @staticmethod
-    def check_order_status(order_info, status):
-        return order_info['status'] == status
-
-    @staticmethod
-    def get_coin_price(tickers, symbol):
-        price = None
-        for t in tickers:
-            if t[Params.SYMBOL] == symbol:
-                price = float(t['price'])
-        return price
 
     @staticmethod
     def get_actual_coin_price(prices, coin, cur):

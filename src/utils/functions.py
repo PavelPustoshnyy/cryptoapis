@@ -1,15 +1,12 @@
 import time
+import numpy as np
 
+from src.calculator_api.checker import Checker
 from src.utils.constants import Coins
 
 
 def current_milli_time():
     return round(time.time() * 1000)
-
-
-def stop_robot(secs):
-    time.sleep(secs)
-    return
 
 
 def get_currencies():
@@ -40,13 +37,29 @@ def get_final_currencies(crns, stp_lst):
 
 def filter_currencies(logger, rdr, clc, crns):
     stp_lst = list()
+    checker = Checker(logger)
     for crn in crns:
         btc_trades = rdr.get_trades(crn, Coins.BTC)
         q_sum = clc.get_q_sum(btc_trades)
         logger.debug(f"{crn}BTC V (sum(q)): {q_sum}")
-        if clc.check_sum(stp_lst, q_sum, crn):
+        if checker.check_sum(stp_lst, q_sum, crn):
             usdt_trades = rdr.get_trades(crn, Coins.USDT)
             q_sum = clc.get_q_sum(usdt_trades)
-            clc.check_sum(stp_lst, q_sum, crn)
+            checker.check_sum(stp_lst, q_sum, crn)
             logger.debug(f"{crn}USDT V (sum(q)): {q_sum}")
     return stp_lst
+
+
+def dec_len(price):
+    dec = np.format_float_positional(float(price), trim='-')
+    if len(str(dec).split('.')) < 2:
+        return 0
+    return len(str(dec).split('.')[1])
+
+
+def truncate_round(value, length):
+    dec = np.format_float_positional(float(value), trim='-')
+    if dec_len(value) <= length:
+        return float(dec)
+    else:
+        return float(str(dec).split('.')[0] + '.' + str(dec).split('.')[1][:length])
