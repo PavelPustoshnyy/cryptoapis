@@ -73,7 +73,7 @@ class Trader:
                 # 3.2.4.c
                 waiting_time = 3  # 3min
                 if not self.order_filled(order_sell_limit_asset_usdt, waiting_time):
-                    self.reader.cancel_order(symbol, order_sell_limit_asset_usdt)
+                    self.reader.cancel_order(order_sell_limit_asset_usdt)
                     price = None
                     self.order_asset(symbol, 'SELL', 'MARKET', qty, price, 'FOK')
             return False
@@ -94,14 +94,14 @@ class Trader:
         # 3.2.8b
         waiting_time = 3  # 3min
         if not self.order_filled(order_sell_limit_min, waiting_time):
-            self.reader.cancel_order(symbol, order_sell_limit_min)
+            self.reader.cancel_order(order_sell_limit_min)
             price = truncate_round(min_cur_usdt_price * 0.99, dec_len(min_cur_usdt_price))
             order_sell_limit_min = self.order_asset(symbol, 'SELL', 'LIMIT', executed_qty_min, price, 'GTC')
 
             # 3.2.8c
             waiting_time = 3  # 3min
             if not self.order_filled(order_sell_limit_min, waiting_time):
-                self.reader.cancel_order(symbol, order_sell_limit_min)
+                self.reader.cancel_order(order_sell_limit_min)
                 price = None
                 self.order_asset(symbol, 'SELL', 'MARKET', executed_qty_min, price, 'FOK')
 
@@ -112,5 +112,5 @@ class Trader:
         # 3.2.7b
         waiting_time = 5  # 5min
         if not self.order_filled(order_sell_limit, waiting_time):
-            self.reader.cancel_order(symbol, order_sell_limit)
+            self.reader.cancel_order(order_sell_limit)
             self.order_asset(symbol, 'SELL', 'MARKET', qty, None, 'FOK')

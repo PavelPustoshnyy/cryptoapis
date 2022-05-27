@@ -1,3 +1,8 @@
+import time
+from datetime import datetime
+
+import requests
+
 from src.calculator_api.calculator import Calculator
 from src.calculator_api.checker import Checker
 from src.calculator_api.trader import Trader
@@ -29,6 +34,8 @@ def main():
 
     final_currencies = get_final_currencies(currencies, stop_list)
     logger.info(f"Final currencies which not in stop list: {final_currencies}")
+    if len(final_currencies) == 0:
+        return
 
     all_tickers = reader.get_tickers()
     d_curs, result_prices = calculator.get_d_curs_and_result_prices(all_tickers, final_currencies)
@@ -107,8 +114,16 @@ def main():
 
 
 if __name__ == '__main__':
-    configure_logger(log_dir_path=config.LOG_DIR_PATH, raw_log_level=config.RAW_LOG_LEVEL)
-    logger = get_logger()
-    logger.info("Program started")
     while True:
-        main()
+        try:
+            configure_logger(log_dir_path=config.LOG_DIR_PATH, raw_log_level=config.RAW_LOG_LEVEL)
+            logger = get_logger()
+            logger.info("Program started")
+            while True:
+                main()
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            print(datetime.now().strftime("%H:%M:%S"), ": request error.Stopping the robot.")
+            time.sleep(300)
+            print(datetime.now().strftime("%H:%M:%S"), ": Start the robot.")
+            continue
+
