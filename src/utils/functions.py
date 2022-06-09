@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import pandas as pd
 
 from src.calculator_api.checker import Checker
 from src.utils.constants import Coins
@@ -9,26 +10,26 @@ def current_milli_time():
     return round(time.time() * 1000)
 
 
-def get_currencies():
-    return [Coins.CKB,
-            Coins.DGB,
-            Coins.ZIL,
-            Coins.TRX,
-            Coins.VET,
-            Coins.RVN,
-            Coins.IOTX,
-            Coins.CTXC,
-            Coins.SYS,
-            Coins.NULS,
-            Coins.DUSK,
-            Coins.FLUX,
-            Coins.PYR,
-            Coins.MC,
-            Coins.REQ,
-            Coins.GXS,
-            Coins.ANT,
-            Coins.LTO,
-            Coins.WAN]
+def get_currencies(reader, calculator):
+    listing = reader.get_listing()
+    intersection = calculator.get_btusdt_pairs(listing)
+    all_tickers = reader.get_tickers()
+
+    btcusdt_price = calculator.get_price(all_tickers, Coins.BTC + Coins.USDT)
+
+    symbols = []
+    for symbol in intersection:
+        klines_btc = pd.DataFrame(reader.get_historical_klines(symbol + Coins.BTC))
+        klines_usdt = pd.DataFrame(reader.get_historical_klines(symbol + Coins.USDT))
+        if not (klines_btc.empty or klines_usdt):
+            klines_btc['usdt_vol'] = klines_btc[7].apply(float) * btcusdt_price
+
+            relation_btc = klines_btc[klines_btc['usdt_vol'] > 5].size / klines_btc.size
+            relation_usdt = klines_usdt[klines_usdt[7] > 5].size / klines_usdt.size
+
+            if relation_btc > 0.85 and relation_usdt > 0.85:
+                symbols.append(symbol)
+    return symbols
 
 
 def get_final_currencies(crns, stp_lst):

@@ -16,9 +16,6 @@ from src.utils.logger import get_logger, configure_logger
 
 def main():
     logger.info("New cycle started")
-    beginning_time = current_milli_time()
-    reader = Reader(logger)
-    calculator = Calculator(logger)
     checker = Checker(logger)
     trader = Trader(logger, reader, calculator)
 
@@ -28,7 +25,6 @@ def main():
 
     if not (checker.check_limits(price_change) or config.DEBUG):
         return
-    currencies = get_currencies()
 
     stop_list = filter_currencies(logger, reader, calculator, currencies)
 
@@ -114,16 +110,26 @@ def main():
 
 
 if __name__ == '__main__':
+    currencies = None
+    currency_time = current_milli_time()
+    beginning_time = current_milli_time()
+
     while True:
         try:
             configure_logger(log_dir_path=config.LOG_DIR_PATH, raw_log_level=config.RAW_LOG_LEVEL)
             logger = get_logger()
             logger.info("Program started")
+
+            reader = Reader(logger)
+            calculator = Calculator(logger)
+
             while True:
+                if not currencies or (currency_time - beginning_time) * 1000 > 86400:
+                    currencies = get_currencies(reader, calculator)
+                    currency_time = current_milli_time()
                 main()
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             print(datetime.now().strftime("%H:%M:%S"), ": request error.Stopping the robot.")
             time.sleep(300)
             print(datetime.now().strftime("%H:%M:%S"), ": Start the robot.")
             continue
-

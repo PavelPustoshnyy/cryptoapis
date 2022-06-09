@@ -53,15 +53,25 @@ class Reader:
             symbol=symbol,
             orderId=order['orderId'])
 
-    def get_futures_exchange_info(self):
-        return self._client.futures_exchange_info()
+    # def get_futures_exchange_info(self):
+    #     return self._client.futures_exchange_info()
 
     def get_symbol_info(self, symbol):
         return self._client.get_symbol_info(symbol=symbol)
 
     def get_btcusdt_info(self):
-        info = self._client.futures_exchange_info()
+        info = self._client.get_exchange_info()
         for item in info['symbols']:
             if item['symbol'] == Coins.BTC + Coins.USDT:
                 price_dec = item['pricePrecision']
                 return price_dec
+
+    def get_listing(self):
+        info = self._client.get_exchange_info()
+        listing = []
+        for item in info['symbols']:
+            listing.append(item['symbol'])
+        return listing
+
+    def get_historical_klines(self, symbol):
+        return self._client.get_historical_klines(symbol, self._client.KLINE_INTERVAL_1MINUTE, "7 days ago UTC")

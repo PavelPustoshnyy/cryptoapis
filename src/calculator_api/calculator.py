@@ -1,6 +1,7 @@
 import copy
 
 from src.utils.constants import Params, Coins
+import pandas as pd
 
 
 class Calculator:
@@ -85,3 +86,20 @@ class Calculator:
     @staticmethod
     def get_actual_coin_price(prices, coin, cur):
         return float(prices[coin][cur])
+
+    @staticmethod
+    def get_btusdt_pairs(listing):
+        btc_set = set()
+        usdt_set = set()
+        for symbol in listing:
+            if symbol.endswith(Coins.BTC):
+                btc_set.add(symbol[:-len(Coins.BTC)])
+            elif symbol.endswith(Coins.USDT):
+                usdt_set.add(symbol[:-len(Coins.USDT)])
+
+        return btc_set.intersection(usdt_set)
+
+    @staticmethod
+    def get_price(all_tickers, symbol):
+        all_tickers = pd.DataFrame(all_tickers)
+        return float(all_tickers.loc[all_tickers['symbol'] == symbol]['price'].values[0])
