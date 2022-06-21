@@ -124,7 +124,7 @@ if __name__ == '__main__':
             calculator = Calculator(logger)
 
             while True:
-                if not currencies or (currency_time - beginning_time) * 1000 > 86400:
+                if not currencies or (currency_time - beginning_time) > 86400 * 1000:
                     currencies = get_currencies(reader, calculator)
                     currency_time = current_milli_time()
                 main()

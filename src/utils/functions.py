@@ -21,11 +21,12 @@ def get_currencies(reader, calculator):
     for symbol in intersection:
         klines_btc = pd.DataFrame(reader.get_historical_klines(symbol + Coins.BTC))
         klines_usdt = pd.DataFrame(reader.get_historical_klines(symbol + Coins.USDT))
-        if not (klines_btc.empty or klines_usdt):
+        if not (klines_btc.empty or klines_usdt.empty):
             klines_btc['usdt_vol'] = klines_btc[7].apply(float) * btcusdt_price
+            klines_usdt['usdt_vol'] = klines_usdt[7].apply(float)
 
             relation_btc = klines_btc[klines_btc['usdt_vol'] > 5].size / klines_btc.size
-            relation_usdt = klines_usdt[klines_usdt[7] > 5].size / klines_usdt.size
+            relation_usdt = klines_usdt[klines_usdt['usdt_vol'] > 5].size / klines_usdt.size
 
             if relation_btc > 0.85 and relation_usdt > 0.85:
                 symbols.append(symbol)
